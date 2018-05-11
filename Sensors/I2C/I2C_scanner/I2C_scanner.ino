@@ -16,35 +16,42 @@
 
 /*
  * I2C Scanner
+ * Scans 7-bit address space
+ * https://www.nxp.com/docs/en/user-guide/UM10204.pdf
  */
+
+// TwoWire.h - TWI/I2C library for Arduino & Wiring
 #include <Wire.h>
 
-#define I2C_ADDRESS_MIN 8
+#define I2C_ADDRESS_MIN   8
 #define I2C_ADDRESS_MAX 127
 
-#define I2C_ERROR_SUCCESS 0
-#define I2C_ERROR_DATA_TOO_LONG 1
+#define I2C_ERROR_SUCCESS                     0
+#define I2C_ERROR_DATA_TOO_LONG               1
 #define I2C_ERROR_NACK_ON_TRANSMIT_OF_ADDRESS 2
-#define I2C_ERROR_NACK_ON_TRANSMIT_OF_DATA 3
-#define I2C_ERROR_OTHER_ERROR 4
+#define I2C_ERROR_NACK_ON_TRANSMIT_OF_DATA    3
+#define I2C_ERROR_OTHER_ERROR                 4
 
-// Convert to Hex char from a byte
-//    ex: 0x41 >> '41'
-//    ex:   65 >> '41'
-char* ByteToHexChar(byte b){
+/*
+ *   Convert byte to hex '0x00'
+ */
+char* ByteToHexChar(byte b)
+{
   static char res[5] = "0x..";
-  res[2] = (b >> 4) | '0';   if (res[2] > '9') res[2] += 7;
+  res[2] = (b >> 4)   | '0'; if (res[2] > '9') res[2] += 7;
   res[3] = (b & 0x0F) | '0'; if (res[3] > '9') res[3] += 7;
   return res;
 }
 
 void setup()
 {
-  Wire.begin();
+  // Serial
   Serial.begin(115200);
   while (!Serial) { }
- 
   Serial.println("\nI2C Scanner");
+  
+  // I2C
+  Wire.begin();
 }
  
 void loop()
@@ -54,9 +61,13 @@ void loop()
   Serial.println("\nScanning ...");
   
   Serial.print("    ");
-  for(address = 0; address < 0x10; address++) { Serial.print(" "); Serial.print(ByteToHexChar(address)); }
+  for(address = 0; address < 0x10; address++) 
+  { 
+    Serial.print(" "); 
+    Serial.print(ByteToHexChar(address)); 
+  }
   
-  for(address = 0; address <= I2C_ADDRESS_MAX; address++ )
+  for(address = 0; address <= I2C_ADDRESS_MAX; address++)
   {
     // new line
     if ((address & 0x0F) == 0)
@@ -65,16 +76,13 @@ void loop()
       Serial.print(ByteToHexChar(address));
     }
     
-    // spaces
+    // spaces for first unused addresses
     if (address < I2C_ADDRESS_MIN)
     {
       Serial.print("     ");
     }
     else
     {
-      // The i2c_scanner uses the return value of
-      // the Write.endTransmisstion to see if
-      // a device did acknowledge to the address.
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
     
@@ -90,7 +98,8 @@ void loop()
     }
   }  
   Serial.println();
-
-  Serial.println("Finished. Sleeping for 10 seconds");
-  ESP.deepSleep(10e6);
+  delay(10000);
+  
+  // Serial.println("Finished. Sleeping for 10 seconds");
+  // ESP.deepSleep(10e6);
 }
