@@ -23,14 +23,14 @@
 // TwoWire.h - TWI/I2C library for Arduino & Wiring
 #include <Wire.h>
 
-#define I2C_ADDRESS_MIN   8
-#define I2C_ADDRESS_MAX 127
+#define I2C_ADDRESS_MIN                         8
+#define I2C_ADDRESS_MAX                       127
 
-#define I2C_ERROR_SUCCESS                     0
-#define I2C_ERROR_DATA_TOO_LONG               1
-#define I2C_ERROR_NACK_ON_TRANSMIT_OF_ADDRESS 2
-#define I2C_ERROR_NACK_ON_TRANSMIT_OF_DATA    3
-#define I2C_ERROR_OTHER_ERROR                 4
+#define I2C_ERROR_SUCCESS                       0
+#define I2C_ERROR_DATA_TOO_LONG                 1
+#define I2C_ERROR_NACK_ON_TRANSMIT_OF_ADDRESS   2
+#define I2C_ERROR_NACK_ON_TRANSMIT_OF_DATA      3
+#define I2C_ERROR_OTHER_ERROR                   4
 
 /*
  *   Convert byte to hex '0x00'
@@ -52,6 +52,9 @@ void setup()
   
   // I2C
   Wire.begin();
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH); 
 }
  
 void loop()
@@ -59,14 +62,16 @@ void loop()
   byte error, address;
 
   Serial.println("\nScanning ...");
-  
+
+  // Header of table
   Serial.print("    ");
   for(address = 0; address < 0x10; address++) 
   { 
     Serial.print(" "); 
     Serial.print(ByteToHexChar(address)); 
   }
-  
+
+  // Loop all addresses
   for(address = 0; address <= I2C_ADDRESS_MAX; address++)
   {
     // new line
@@ -76,18 +81,19 @@ void loop()
       Serial.print(ByteToHexChar(address));
     }
     
-    // spaces for first unused addresses
-    if (address < I2C_ADDRESS_MIN)
+    // don't scan but insert spaces for non-used address space
+    if ((address < I2C_ADDRESS_MIN) || (address > I2C_ADDRESS_MAX))
     {
       Serial.print("     ");
     }
     else
     {
+      // Test address
       Wire.beginTransmission(address);
       error = Wire.endTransmission();
-    
       if (error == I2C_ERROR_SUCCESS)
       {
+        // success: slave responses to address 
         Serial.print(" ");
         Serial.print(ByteToHexChar(address));
       }
